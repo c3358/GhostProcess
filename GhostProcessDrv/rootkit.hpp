@@ -1,0 +1,57 @@
+#pragma once
+#include "hook.hpp"
+
+//device Name 與 SymLinkName
+#define symlink_name L"\\??\\GHOST_PROCESS"
+#define device_name L"\\device\\GHOST_PROCESS"
+
+//自定義的 IOCTL
+#define UNLINK_ACTIVEPROCESSLINKS CTL_CODE(FILE_DEVICE_UNKNOWN,   0x800,  METHOD_BUFFERED,FILE_ANY_ACCESS)
+#define UNLINK_PROCESSLISTENTRY CTL_CODE(FILE_DEVICE_UNKNOWN,   0x801,  METHOD_BUFFERED,FILE_ANY_ACCESS)
+#define UNLINK_HANDLETABLELIST CTL_CODE(FILE_DEVICE_UNKNOWN,   0x802,  METHOD_BUFFERED,FILE_ANY_ACCESS)
+#define NULL_PSPCIDTABLE CTL_CODE(FILE_DEVICE_UNKNOWN,   0x803,  METHOD_BUFFERED,FILE_ANY_ACCESS)
+#define ALL_DKOM CTL_CODE(FILE_DEVICE_UNKNOWN,   0x804,  METHOD_BUFFERED,FILE_ANY_ACCESS)
+#define SET_PID CTL_CODE(FILE_DEVICE_UNKNOWN,   0x805,  METHOD_BUFFERED,FILE_ANY_ACCESS)
+#define INFINITY_HOOK_ON CTL_CODE(FILE_DEVICE_UNKNOWN,   0x806,  METHOD_BUFFERED,FILE_ANY_ACCESS)
+#define INFINITY_HOOK_OFF CTL_CODE(FILE_DEVICE_UNKNOWN,   0x807,  METHOD_BUFFERED,FILE_ANY_ACCESS)
+
+typedef NTSTATUS(*FNtCreateFile)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK, PLARGE_INTEGER, ULONG, ULONG, ULONG, ULONG, PVOID, ULONG);
+typedef NTSTATUS(*FNtQuerySystemInformation)(ULONG, PVOID, ULONG, PULONG);
+
+typedef struct _SYSTEM_PROCESSES { // Information Class 5
+    ULONG NextEntryDelta;
+    ULONG ThreadCount;
+    ULONG Reserved1[6];
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER KernelTime;
+    UNICODE_STRING ProcessName;
+    KPRIORITY BasePriority;
+    ULONG ProcessId;
+    ULONG InheritedFromProcessId;
+    ULONG HandleCount;
+    ULONG Reserved2[2];
+    VM_COUNTERS VmCounters;
+} SYSTEM_PROCESSES, * PSYSTEM_PROCESSES;
+
+NTSTATUS MyNtQuerySystemInformation(
+    IN ULONG SystemInformationClass,
+    IN PVOID SystemInformation,
+    IN ULONG SystemInformationLength,
+    OUT PULONG ReturnLength);
+
+struct _IOCTL_DATA
+{
+    DWORD pid;
+    DWORD result;
+}IOCTL_DATA, * PIOCTL_DATA;
+
+PDEVICE_OBJECT pMyDevice;
+UNICODE_STRING DeviceName;
+UNICODE_STRING SymLinkName;
+DWORD pid = -1;
+bool hook_on = FALSE;
+PEPROCESS Eprocess = NULL;
+
+FNtCreateFile g_NtCreateFile = 0;
+FNtQuerySystemInformation g_NtQuerySystemInformation = 0;
