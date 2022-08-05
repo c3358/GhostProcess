@@ -1,5 +1,5 @@
 # Overview
-GhostProcess is a PoC that hides process in Windows kernel. 
+GhostProcess is a PoC that hides process and evades PatchGuard in Windows kernel. 
 
 # Environment
 * PoC is developed in Visual Studio 2022 and tested on Windows 10 1909.
